@@ -1,22 +1,12 @@
 #include "mainwindow.h"
 #include <QApplication>
 
-#include "qpushbutton.h"
-#include "qfont.h"
-#include "QVBoxLayout"
-#include "qlcdnumber.h"
-#include "qslider.h"
-
-class TestWidget : public QWidget
-{
-public:
-    TestWidget(QWidget *parent = nullptr, Qt::WindowFlags f = Qt::WindowFlags());
-};
+#include "testwidget.h"
 
 TestWidget::TestWidget(QWidget *parent, Qt::WindowFlags f)
           :QWidget (parent, f)
 {
-    setMinimumSize(100, 100);
+    setMinimumSize(200, 200);
     setMaximumSize(200, 200);
 
     QPushButton *buttonQuit = new QPushButton("WQUIT", this);
@@ -26,14 +16,15 @@ TestWidget::TestWidget(QWidget *parent, Qt::WindowFlags f)
 
     connect(buttonQuit, SIGNAL(clicked()), qApp, SLOT(quit()));
 
-    QLCDNumber *lcd = new QLCDNumber(2, this);
+    lcd = new QLCDNumber(2, this);
     lcd->display(50);
-    QSlider *slider = new QSlider(Qt::Orientation::Horizontal, this);
+    slider = new QSlider(Qt::Orientation::Horizontal, this);
     slider->setRange(0, 99);
     slider->setValue(50);
     slider->setGeometry(20, 100, 150, 30);
 
-    connect(slider, SIGNAL(valueChanged(int)), lcd, SLOT(display(int)));
+    connect( slider, SIGNAL(valueChanged(int)), SIGNAL(valueChanged(int)) );
+//    connect(slider, SIGNAL(valueChanged(int)), lcd, SLOT(display(int)));
 
 //    QVBoxLayout vlayout;
 //    vlayout.addWidget(buttonQuit);
@@ -42,11 +33,10 @@ TestWidget::TestWidget(QWidget *parent, Qt::WindowFlags f)
 //    this->setLayout(&vlayout);
 }
 
-class Test2Widget : public QVBoxLayout
+void TestWidget::display(int v)
 {
-public:
-    Test2Widget(QWidget *parent = nullptr);
-};
+    lcd->display(v);
+}
 
 Test2Widget::Test2Widget(QWidget *parent)
            :QVBoxLayout (parent)
@@ -67,7 +57,7 @@ int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
 
-    int testCase = 2;
+    int testCase = 4;
 
     if (testCase == 0) {
         MainWindow w;
@@ -99,10 +89,27 @@ int main(int argc, char *argv[])
         TestWidget testw;
         testw.show();
         return a.exec();
-    } else if (testCase == 3) {
+    } else if (testCase == 3) { // fail
         Test2Widget test2l;
         QWidget window;
         window.setLayout(&test2l);
+        window.show();
+        return a.exec();
+    } else if (testCase == 4) {
+        QGridLayout gridLayout;
+        TestWidget *previous = nullptr;
+        for (int row = 0; row < 4; row++) {
+            for (int col = 0; col < 4; col++) {
+                TestWidget *tw = new TestWidget();
+                gridLayout.addWidget(tw, row, col);
+                if (previous != nullptr)
+                    QObject::connect(tw, SIGNAL(valueChanged(int)), previous, SLOT(display(int)));
+                previous = tw;
+
+            }
+        }
+        QWidget window;
+        window.setLayout(&gridLayout);
         window.show();
         return a.exec();
     }
