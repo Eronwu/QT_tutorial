@@ -2,11 +2,12 @@
 #include <QApplication>
 
 #include "testwidget.h"
+#include "cannonfield.h"
 
 TestWidget::TestWidget(QWidget *parent, Qt::WindowFlags f)
           :QWidget (parent, f)
 {
-    setMinimumSize(200, 200);
+    setMinimumSize(200, 150);
     setMaximumSize(200, 200);
 
     QPushButton *buttonQuit = new QPushButton("WQUIT", this);
@@ -37,7 +38,17 @@ void TestWidget::display(int v)
 {
     lcd->display(v);
 }
-
+void TestWidget::setRange( int minVal, int maxVal )
+{
+    if ( minVal < 0 || maxVal > 99 || minVal > maxVal ) {
+      qWarning( "LCDRange::setRange(%d,%d)\n"
+               "\tRange must be 0..99\n"
+               "\tand minVal must not be greater than maxVal",
+               minVal, maxVal );
+      return;
+    }
+    slider->setRange( minVal, maxVal );
+}
 Test2Widget::Test2Widget(QWidget *parent)
            :QVBoxLayout (parent)
 {
@@ -57,7 +68,7 @@ int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
 
-    int testCase = 4;
+    int testCase = 5;
 
     if (testCase == 0) {
         MainWindow w;
@@ -111,6 +122,50 @@ int main(int argc, char *argv[])
         QWidget window;
         window.setLayout(&gridLayout);
         window.show();
+        return a.exec();
+    } else if (testCase == 5) {
+        TestWidget lcdRange;
+        lcdRange.setRange(7, 70);
+        CannonField connonField;
+//        connonField.resize(200,200);
+        TestWidget force;
+        force.setRange( 10, 50 );
+
+        QPushButton shoot;
+        shoot.setText("shoot");
+        shoot.setFont( QFont( "Times", 18, QFont::Bold ) );
+        QObject::connect( &shoot, SIGNAL(clicked()),
+                          &connonField, SLOT(shoot()) );
+
+        QObject::connect(&lcdRange, SIGNAL(valueChanged(int)),
+                         &connonField, SLOT(setAngle(int)));
+        QObject::connect(&connonField, SIGNAL(angleChanged(int)),
+                         &lcdRange, SLOT(display(int)));
+
+        QObject::connect(&force, SIGNAL(valueChanged(int)),
+                         &connonField, SLOT(setForce(int)) );
+        QObject::connect(&connonField, SIGNAL(forceChanged(int)),
+                         &force, SLOT(setValue(int)) );
+
+        QGridLayout gridLayout;
+        gridLayout.setHorizontalSpacing(10);
+        gridLayout.setVerticalSpacing(10);
+        gridLayout.addWidget(&lcdRange, 0, 0);
+        gridLayout.addWidget(&force, 1, 0);
+        gridLayout.addWidget(&connonField, 1, 1);
+        gridLayout.setColumnStretch(1, 20);
+        gridLayout.addWidget(&shoot, 0,1);
+
+        lcdRange.display(50);
+        force.display(25);
+        lcdRange.setFocus();
+        lcdRange.setFocusProxy(lcdRange.slider);
+
+        QWidget window;
+        window.setLayout(&gridLayout);
+        window.resize(500, 500);
+        window.show();
+
         return a.exec();
     }
 

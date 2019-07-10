@@ -15,6 +15,7 @@ public:
     TestWidget(QWidget *parent = nullptr, Qt::WindowFlags f = Qt::WindowFlags());
     QLCDNumber *lcd;
     QSlider *slider;
+    void setRange(int minVal, int maxVal);
 public slots:
     void display(int);
 signals:

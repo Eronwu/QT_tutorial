@@ -25,10 +25,12 @@ DEFINES += QT_DEPRECATED_WARNINGS
 CONFIG += c++11
 
 SOURCES += \
+        cannonfield.cpp \
         main.cpp \
         mainwindow.cpp
 
 HEADERS += \
+        cannonfield.h \
         mainwindow.h \
         testwidget.h
 
